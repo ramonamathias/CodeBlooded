@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TruthGuard AR Viewer</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar-nft.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-white text-black min-h-screen">
+    <div class="fixed top-0 left-0 right-0 z-50 bg-black bg-opacity-75 p-4">
+        <div class="flex justify-between items-center">
+            <h1 class="text-xl font-bold text-blue-400">TruthGuard AR - Authenticity Visualization</h1>
+            <div class="flex items-center space-x-4">
+                <button onclick="toggleARMode()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded font-medium">
+                    <i class="fas fa-eye mr-2"></i><span id="arModeText">Start AR</span>
+                </button>
+                <button onclick="window.close()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded font-medium">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AR Scene -->
+    <a-scene
+        id="arScene"
+        embedded
+        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+        class="hidden"
+    >
+        <a-camera gps-camera rotation-reader></a-camera>
+        
+        <!-- AR Content -->
+        <a-entity id="arContent" position="0 0 -3">
+            <!-- Authenticity Meter -->
+            <a-cylinder id="authenticityMeter" 
+                        position="0 1.5 0" 
+                        radius="0.1" 
+                        height="2" 
+                        color="#333333">
+            </a-cylinder>
+            
+            <!-- Confidence Indicator -->
+            <a-sphere id="confidenceSphere" 
+                      position="0 2.5 0" 
+                      radius="0.2" 
+                      color="#00ff00">
+            </a-sphere>
+            
+            <!-- Status Text -->
+            <a-text id="statusText" 
+                    position="0 3 0" 
+                    align="center" 
+                    color="#ffffff" 
+                    value="Waiting for analysis..."
+                    scale="0.5 0.5 0.5">
+            </a-text>
+            
+            <!-- Probability Bars -->
+            <a-box id="aiBar" 
+                   position="-1 1 0" 
+                   width="0.1" 
+                   height="1" 
+                   depth="0.1" 
+                   color="#ff0000">
+            </a-box>
+            
+            <a-box id="humanBar" 
+                   position="1 1 0" 
+                   width="0.1" 
+                   height="1" 
+                   depth="0.1" 
+                   color="#00ff00">
+            </a-box>
+            
+            <!-- Labels -->
+            <a-text position="-1 0.2 0" align="center" color="#ff0000" value="AI" scale="0.3 0.3 0.3"></a-text>
+            <a-text position="1 0.2 0" align="center" color="#00ff00" value="Human" scale="0.3 0.3 0.3"></a-text>
+        </a-entity>
+    </a-scene>
+
+    <!-- Regular View -->
+    <div id="regularView" class="pt-20 p-8">
+        <div class="max-w-4xl mx-auto">
+            <div class="bg-gray-800 rounded-2xl p-8 mb-8">
+                <h2 class="text-2xl font-bold mb-6 text-center">AR Authenticity Visualization</h2>
+                
+                <!-- Mock Data Display -->
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-semibold text-blue-400">Current Analysis</h3>
+                        <div id="currentAnalysis" class="bg-gray-700 rounded-lg p-4">
+                            <div class="text-center text-gray-400">No active analysis</div>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-semibold text-purple-400">AR Controls</h3>
+                        <div class="space-y-2">
+                            <button onclick="simulateDetection('ai')" class="w-full bg-red-600 hover:bg-red-700 px-4 py-2 rounded font-medium">
+                                Simulate AI Detection
+                            </button>
+                            <button onclick="simulateDetection('human')" class="w-full bg-green-600 hover:bg-green-700 px-4 py-2 rounded font-medium">
+                                Simulate Human Content
+                            </button>
+                            <button onclick="resetVisualization()" class="w-full bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded font-medium">
+                                Reset Visualization
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Visualization Preview -->
+                <div class="mt-8 bg-gray-700 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold mb-4">Visualization Preview</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="text-center">
+                            <div class="bg-red-500 h-24 rounded-lg mb-2 relative overflow-hidden">
+                                <div id="aiBarPreview" class="bg-red-600 absolute bottom-0 w-full transition-all duration-1000" style="height: 0%"></div>
+                            </div>
+                            <div class="text-sm">AI Probability</div>
+                            <div id="aiProbText" class="font-bold text-red-400">0%</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="bg-green-500 h-24 rounded-lg mb-2 relative overflow-hidden">
+                                <div id="humanBarPreview" class="bg-green-600 absolute bottom-0 w-full transition-all duration-1000" style="height: 100%"></div>
+                            </div>
+                            <div class="text-sm">Human Probability</div>
+                            <div id="humanProbText" class="font-bold text-green-400">100%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let arMode = false;
+        let currentData = null;
+
+        function toggleARMode() {
+            const arScene = document.getElementById('arScene');
+            const regularView = document.getElementById('regularView');
+            const arModeText = document.getElementById('arModeText');
+            
+            arMode = !arMode;
+            
+            if (arMode) {
+                arScene.classList.remove('hidden');
+                regularView.classList.add('hidden');
+                arModeText.textContent = 'Exit AR';
+            } else {
+                arScene.classList.add('hidden');
+                regularView.classList.remove('hidden');
+                arModeText.textContent = 'Start AR';
+            }
+        }
+
+        function simulateDetection(type) {
+            let aiProb, humanProb, status, color;
+            
+            if (type === 'ai') {
+                aiProb = 0.85;
+                humanProb = 0.15;
+                status = 'AI GENERATED CONTENT DETECTED';
+                color = '#ff0000';
+            } else {
+                aiProb = 0.12;
+                humanProb = 0.88;
+                status = 'HUMAN CONTENT VERIFIED';
+                color = '#00ff00';
+            }
+            
+            // Update AR visualization
+            updateARVisualization({ ai_probability: aiProb, human_probability: humanProb, status: status, color: color });
+            
+            // Update preview
+            updatePreview(aiProb, humanProb);
+            
+            // Update current analysis display
+            document.getElementById('currentAnalysis').innerHTML = `
+                <div class="text-center">
+                    <div class="text-lg font-bold mb-2" style="color: ${color}">${status}</div>
+                    <div class="text-sm text-gray-300">
+                        AI: ${(aiProb * 100).toFixed(1)}% | Human: ${(humanProb * 100).toFixed(1)}%
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateARVisualization(data) {
+            if (!arMode) return;
+            
+            // Update AR elements
+            const statusText = document.getElementById('statusText');
+            const confidenceSphere = document.getElementById('confidenceSphere');
+            const aiBar = document.getElementById('aiBar');
+            const humanBar = document.getElementById('humanBar');
+            
+            if (statusText) {
+                statusText.setAttribute('value', data.status);
+                statusText.setAttribute('color', data.color);
+            }
+            
+            if (confidenceSphere) {
+                confidenceSphere.setAttribute('color', data.color);
+                confidenceSphere.setAttribute('animation', 'property: rotation; to: 0 360 0; loop: true; dur: 2000');
+            }
+            
+            if (aiBar) {
+                aiBar.setAttribute('height', data.ai_probability * 2);
+                aiBar.setAttribute('position', `-1 ${data.ai_probability} 0`);
+            }
+            
+            if (humanBar) {
+                humanBar.setAttribute('height', data.human_probability * 2);
+                humanBar.setAttribute('position', `1 ${data.human_probability} 0`);
+            }
+        }
+
+        function updatePreview(aiProb, humanProb) {
+            document.getElementById('aiBarPreview').style.height = (aiProb * 100) + '%';
+            document.getElementById('humanBarPreview').style.height = (humanProb * 100) + '%';
+            document.getElementById('aiProbText').textContent = (aiProb * 100).toFixed(1) + '%';
+            document.getElementById('humanProbText').textContent = (humanProb * 100).toFixed(1) + '%';
+        }
+
+        function resetVisualization() {
+            updatePreview(0, 1);
+            document.getElementById('currentAnalysis').innerHTML = '<div class="text-center text-gray-400">No active analysis</div>';
+            
+            if (arMode) {
+                updateARVisualization({ 
+                    ai_probability: 0, 
+                    human_probability: 1, 
+                    status: 'READY FOR ANALYSIS', 
+                    color: '#ffffff' 
+                });
+            }
+        }
+
+        // Listen for messages from parent window
+        window.addEventListener('message', function(event) {
+            if (event.data.type === 'detection_result') {
+                const data = event.data.result;
+                updateARVisualization({
+                    ai_probability: data.ai_probability,
+                    human_probability: 1 - data.ai_probability,
+                    status: data.is_ai_generated ? 'AI DETECTED' : 'HUMAN VERIFIED',
+                    color: data.is_ai_generated ? '#ff0000' : '#00ff00'
+                });
+                updatePreview(data.ai_probability, 1 - data.ai_probability);
+            }
+        });
+
+        // Initialize with demo content
+        document.addEventListener('DOMContentLoaded', function() {
+            resetVisualization();
+        });
+    </script>
+</body>
+</html>
