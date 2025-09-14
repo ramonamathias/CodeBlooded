@@ -1,481 +1,165 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TruthGuard AI - Multi-Modal Authenticity Detection</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TruthGuard AI - Multi-Modal Authenticity Detection</title>
+
+  <!-- Tailwind + FontAwesome -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Socket.io -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
 </head>
-<body class="bg-gray-900 text-white">
-    <!-- Navigation -->
-    <nav class="bg-black bg-opacity-50 backdrop-blur-lg border-b border-blue-500">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="flex justify-between items-center py-4">
-                <div class="flex items-center">
-                    <i class="fas fa-shield-halved text-blue-400 text-2xl mr-3"></i>
-                    <span class="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-                        TruthGuard AI
-                    </span>
-                </div>
-                <div class="flex items-center space-x-6">
-                    <button onclick="toggleMode('text')" class="nav-btn active" id="textBtn">
-                        <i class="fas fa-file-text mr-2"></i>Text
-                    </button>
-                    <button onclick="toggleMode('image')" class="nav-btn" id="imageBtn">
-                        <i class="fas fa-image mr-2"></i>Image
-                    </button>
-                    <button onclick="openARViewer()" class="nav-btn">
-                        <i class="fas fa-cube mr-2"></i>AR Mode
-                    </button>
-                    <div class="flex items-center">
-                        <div id="connectionStatus" class="h-2 w-2 rounded-full bg-green-400"></div>
-                        <span class="ml-2 text-sm">Live</span>
-                    </div>
-                </div>
-            </div>
+<body class="bg-white text-black">
+  <!-- Navigation -->
+<nav class="bg-white bg-opacity-50 backdrop-blur-lg border-b border-blue-500">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="flex justify-between items-center py-4">
+        <div class="flex items-center">
+          <i class="fas fa-shield-halved text-blue-400 text-2xl mr-3"></i>
+          <span class="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+            TruthGuard AI
+          </span>
         </div>
-    </nav>
-
-    <!-- Main Container -->
-    <div class="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
-        <!-- Hero Section -->
-        <section class="pt-12 pb-8">
-            <div class="max-w-7xl mx-auto px-4 text-center">
-                <h1 class="text-5xl font-bold mb-6 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-                    Multi-Modal AI Detection
-                </h1>
-                <p class="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
-                    Advanced authenticity verification across text, images, audio, and video with real-time AR visualization
-                </p>
-            </div>
-        </section>
-
-        <!-- Detection Interface -->
-        <section class="max-w-6xl mx-auto px-4">
-            <div class="grid lg:grid-cols-3 gap-8">
-                <!-- Input Panel -->
-                <div class="lg:col-span-2">
-                    <!-- Text Detection Mode -->
-                    <div id="textMode" class="detection-mode active">
-                        <div class="bg-black bg-opacity-30 backdrop-blur-lg rounded-2xl p-8 border border-blue-500">
-                            <h2 class="text-2xl font-bold mb-6 text-blue-400">Text Authenticity Analysis</h2>
-                            
-                            <textarea
-                                id="textInput"
-                                rows="8"
-                                class="w-full p-4 bg-gray-800 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-white placeholder-gray-400"
-                                placeholder="Paste text to analyze for AI generation patterns..."
-                            ></textarea>
-                            
-                            <div class="flex justify-between items-center mt-4">
-                                <div class="text-sm text-gray-400">
-                                    <span id="textCharCount">0</span> characters, <span id="textWordCount">0</span> words
-                                </div>
-                                <button
-                                    id="analyzeTextBtn"
-                                    onclick="analyzeText()"
-                                    class="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 px-6 py-3 rounded-lg font-bold flex items-center transition-all duration-300 transform hover:scale-105"
-                                >
-                                    <i class="fas fa-brain mr-2"></i>
-                                    Analyze Text
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Image Detection Mode -->
-                    <div id="imageMode" class="detection-mode hidden">
-                        <div class="bg-black bg-opacity-30 backdrop-blur-lg rounded-2xl p-8 border border-purple-500">
-                            <h2 class="text-2xl font-bold mb-6 text-purple-400">Image Authenticity Analysis</h2>
-                            
-                            <div class="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center">
-                                <input type="file" id="imageInput" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
-                                <div id="imageDropZone" onclick="document.getElementById('imageInput').click()">
-                                    <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
-                                    <p class="text-gray-400 mb-2">Click to upload or drag image here</p>
-                                    <p class="text-sm text-gray-500">Supports JPG, PNG, WebP</p>
-                                </div>
-                                <div id="imagePreview" class="hidden mt-4">
-                                    <img id="previewImg" class="max-w-full h-64 mx-auto rounded-lg">
-                                </div>
-                            </div>
-                            
-                            <button
-                                id="analyzeImageBtn"
-                                onclick="analyzeImage()"
-                                class="w-full mt-6 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 px-6 py-3 rounded-lg font-bold flex items-center justify-center transition-all duration-300 transform hover:scale-105"
-                                disabled
-                            >
-                                <i class="fas fa-search mr-2"></i>
-                                Analyze Image
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Results Panel -->
-                <div class="space-y-6">
-                    <!-- Real-time Status -->
-                    <div class="bg-black bg-opacity-30 backdrop-blur-lg rounded-2xl p-6 border border-green-500">
-                        <h3 class="text-lg font-bold mb-4 text-green-400">Live Analysis</h3>
-                        <div id="liveStatus" class="space-y-3">
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-gray-400">System Status:</span>
-                                <span class="text-green-400 font-medium">Online</span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-gray-400">AI Models:</span>
-                                <span class="text-green-400 font-medium">Ready</span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-gray-400">Analyses Today:</span>
-                                <span class="text-blue-400 font-medium" id="todayCount">0</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Recent Results -->
-                    <div class="bg-black bg-opacity-30 backdrop-blur-lg rounded-2xl p-6 border border-yellow-500">
-                        <h3 class="text-lg font-bold mb-4 text-yellow-400">Recent Detections</h3>
-                        <div id="recentResults" class="space-y-3">
-                            <div class="text-center text-gray-500 py-8">
-                                No analyses yet
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Results Display -->
-        <section id="resultsSection" class="hidden max-w-6xl mx-auto px-4 mt-12">
-            <div class="bg-black bg-opacity-50 backdrop-blur-lg rounded-2xl p-8 border border-gray-600">
-                <h2 class="text-2xl font-bold mb-6">Analysis Results</h2>
-                <div id="resultsContent">
-                    <!-- Results will be populated here -->
-                </div>
-            </div>
-        </section>
+        <div class="flex items-center space-x-6">
+          <button onclick="toggleMode('text')" class="nav-btn active" id="textBtn">
+            <i class="fas fa-file-text mr-2"></i>Text
+          </button>
+          <button onclick="toggleMode('image')" class="nav-btn" id="imageBtn">
+            <i class="fas fa-image mr-2"></i>Image
+          </button>
+          <button onclick="openARViewer()" class="nav-btn">
+            <i class="fas fa-cube mr-2"></i>AR Mode
+          </button>
+          <div class="flex items-center">
+            <div id="connectionStatus" class="h-2 w-2 rounded-full bg-green-400"></div>
+            <span class="ml-2 text-sm">Live</span>
+          </div>
+        </div>
+      </div>
     </div>
+  </nav>
 
-    <style>
-        .nav-btn {
-            @apply px-4 py-2 rounded-lg text-gray-300 hover:text-white hover:bg-gray-700 transition-all duration-200;
-        }
-        .nav-btn.active {
-            @apply bg-blue-600 text-white;
-        }
-        .detection-mode {
-            @apply transition-all duration-500 ease-in-out;
-        }
-        .detection-mode.hidden {
-            @apply opacity-0 pointer-events-none;
-        }
-        .detection-mode.active {
-            @apply opacity-100;
-        }
-        .pulse-ring {
-            animation: pulse-ring 1.25s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
-        }
-        @keyframes pulse-ring {
-            0% { transform: scale(.33); }
-            80%, 100% { opacity: 0; }
-        }
-    </style>
+  <!-- Main Container -->
+  <div class="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
+    <!-- Hero Section -->
+    <section class="pt-12 pb-8">
+      <div class="max-w-7xl mx-auto px-4 text-center">
+        <h1 class="text-5xl font-bold mb-6 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+          Multi-Modal AI Detection
+        </h1>
+        <p class="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
+          Advanced authenticity verification across text, images, audio, and video with real-time AR visualization
+        </p>
+      </div>
+    </section>
 
-    <script>
-        // Initialize Socket.IO connection
-        const socket = io();
-        let currentMode = 'text';
-        let analysisCount = 0;
-
-        // Socket event handlers
-        socket.on('connect', function() {
-            console.log('Connected to server');
-            document.getElementById('connectionStatus').className = 'h-2 w-2 rounded-full bg-green-400';
-        });
-
-        socket.on('disconnect', function() {
-            console.log('Disconnected from server');
-            document.getElementById('connectionStatus').className = 'h-2 w-2 rounded-full bg-red-400';
-        });
-
-        socket.on('detection_update', function(data) {
-            updateRecentResults(data);
-        });
-
-        // Mode switching
-        function toggleMode(mode) {
-            currentMode = mode;
-            
-            // Update navigation
-            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(mode + 'Btn').classList.add('active');
-            
-            // Update detection modes
-            document.querySelectorAll('.detection-mode').forEach(div => {
-                div.classList.remove('active');
-                div.classList.add('hidden');
-            });
-            
-            document.getElementById(mode + 'Mode').classList.remove('hidden');
-            document.getElementById(mode + 'Mode').classList.add('active');
-        }
-
-        // Text analysis
-        function analyzeText() {
-            const text = document.getElementById('textInput').value.trim();
-            
-            if (!text) {
-                alert('Please enter some text to analyze');
-                return;
-            }
-            
-            const btn = document.getElementById('analyzeTextBtn');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Analyzing...';
-            btn.disabled = true;
-            
-            fetch('/api/detect-text', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: text })
-            })
-            .then(response => response.json())
-            .then(data => {
-                displayTextResults(data);
-                analysisCount++;
-                document.getElementById('todayCount').textContent = analysisCount;
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error analyzing text. Please try again.');
-            })
-            .finally(() => {
-                btn.innerHTML = '<i class="fas fa-brain mr-2"></i>Analyze Text';
-                btn.disabled = false;
-            });
-        }
-
-        // Image analysis
-        function analyzeImage() {
-            const imageInput = document.getElementById('imageInput');
-            const file = imageInput.files[0];
-            
-            if (!file) {
-                alert('Please select an image to analyze');
-                return;
-            }
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const btn = document.getElementById('analyzeImageBtn');
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Analyzing...';
-                btn.disabled = true;
-                
-                fetch('/api/detect-image', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ image: e.target.result })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    displayImageResults(data);
-                    analysisCount++;
-                    document.getElementById('todayCount').textContent = analysisCount;
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error analyzing image. Please try again.');
-                })
-                .finally(() => {
-                    btn.innerHTML = '<i class="fas fa-search mr-2"></i>Analyze Image';
-                    btn.disabled = false;
-                });
-            };
-            reader.readAsDataURL(file);
-        }
-
-        // Display text results
-        function displayTextResults(data) {
-            const resultsSection = document.getElementById('resultsSection');
-            const resultsContent = document.getElementById('resultsContent');
-            
-            const statusClass = data.is_ai_generated ? 'text-red-400' : 'text-green-400';
-            const statusText = data.is_ai_generated ? 'AI Generated Content Detected' : 'Human-Written Content';
-            const statusIcon = data.is_ai_generated ? 'fas fa-exclamation-triangle' : 'fas fa-check-circle';
-            
-            resultsContent.innerHTML = `
-                <div class="border rounded-lg p-6 mb-6 ${data.is_ai_generated ? 'border-red-500 bg-red-900 bg-opacity-20' : 'border-green-500 bg-green-900 bg-opacity-20'}">
-                    <div class="flex items-center mb-4">
-                        <i class="${statusIcon} ${statusClass} text-2xl mr-3"></i>
-                        <div>
-                            <div class="font-bold text-lg ${statusClass}">${statusText}</div>
-                            <div class="text-sm text-gray-400">Confidence: ${(data.confidence_score * 100).toFixed(1)}%</div>
-                        </div>
-                    </div>
+    <!-- Detection Interface -->
+    <section class="max-w-6xl mx-auto px-4">
+      <div class="grid lg:grid-cols-3 gap-8">
+        <!-- Input Panel -->
+        <div class="lg:col-span-2">
+          <!-- Text Detection Mode -->
+          <div id="textMode" class="detection-mode active">
+            <div class="bg-white bg-opacity-30 backdrop-blur-lg rounded-2xl p-8 border border-blue-500">
+              <h2 class="text-2xl font-bold mb-6 text-blue-400">Text Authenticity Analysis</h2>
+              <textarea
+                id="textInput"
+                rows="8"
+                class="w-full p-4 bg-gray-800 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-white placeholder-gray-400"
+                placeholder="Paste text to analyze for AI generation patterns..."
+              ></textarea>
+              <div class="flex justify-between items-center mt-4">
+                <div class="text-sm text-gray-400">
+                  <span id="textCharCount">0</span> characters, <span id="textWordCount">0</span> words
                 </div>
-                
-                <div class="grid md:grid-cols-2 gap-6 mb-6">
-                    <div class="bg-gray-800 p-4 rounded-lg">
-                        <h4 class="font-medium text-red-400 mb-2">AI Probability</h4>
-                        <div class="w-full bg-gray-600 rounded-full h-3 mb-2">
-                            <div class="bg-red-500 h-3 rounded-full transition-all duration-1000" style="width: ${data.ai_probability * 100}%"></div>
-                        </div>
-                        <div class="text-sm text-gray-300">${(data.ai_probability * 100).toFixed(1)}%</div>
-                    </div>
-                    
-                    <div class="bg-gray-800 p-4 rounded-lg">
-                        <h4 class="font-medium text-green-400 mb-2">Human Probability</h4>
-                        <div class="w-full bg-gray-600 rounded-full h-3 mb-2">
-                            <div class="bg-green-500 h-3 rounded-full transition-all duration-1000" style="width: ${(1 - data.ai_probability) * 100}%"></div>
-                        </div>
-                        <div class="text-sm text-gray-300">${((1 - data.ai_probability) * 100).toFixed(1)}%</div>
-                    </div>
-                </div>
-                
-                <div class="bg-blue-900 bg-opacity-30 border border-blue-500 rounded-lg p-4 mb-6">
-                    <h4 class="font-medium text-blue-400 mb-2">Analysis Explanation</h4>
-                    <p class="text-blue-200 text-sm">${data.explanation}</p>
-                </div>
-                
-                <div class="flex justify-between items-center">
-                    <button onclick="openARViewer()" class="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 px-6 py-2 rounded-lg font-medium transition-all duration-300">
-                        <i class="fas fa-cube mr-2"></i>View in AR
-                    </button>
-                    <div class="text-sm text-gray-400">
-                        Analyzed: ${new Date(data.timestamp).toLocaleTimeString()}
-                    </div>
-                </div>
-            `;
-            
-            resultsSection.classList.remove('hidden');
-            resultsSection.scrollIntoView({ behavior: 'smooth' });
-        }
+                <button
+                  id="analyzeTextBtn"
+                  onclick="analyzeText()"
+                  class="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 px-6 py-3 rounded-lg font-bold flex items-center transition-all duration-300 transform hover:scale-105"
+                >
+                  <i class="fas fa-brain mr-2"></i>
+                  Analyze Text
+                </button>
+              </div>
+            </div>
+          </div>
 
-        // Display image results
-        function displayImageResults(data) {
-            const resultsSection = document.getElementById('resultsSection');
-            const resultsContent = document.getElementById('resultsContent');
-            
-            const statusClass = data.is_ai_generated ? 'text-red-400' : 'text-green-400';
-            const statusText = data.is_ai_generated ? 'AI Manipulation Detected' : 'Authentic Image';
-            const statusIcon = data.is_ai_generated ? 'fas fa-exclamation-triangle' : 'fas fa-shield-check';
-            
-            resultsContent.innerHTML = `
-                <div class="border rounded-lg p-6 mb-6 ${data.is_ai_generated ? 'border-red-500 bg-red-900 bg-opacity-20' : 'border-green-500 bg-green-900 bg-opacity-20'}">
-                    <div class="flex items-center mb-4">
-                        <i class="${statusIcon} ${statusClass} text-2xl mr-3"></i>
-                        <div>
-                            <div class="font-bold text-lg ${statusClass}">${statusText}</div>
-                            <div class="text-sm text-gray-400">Confidence: ${(data.confidence_score * 100).toFixed(1)}%</div>
-                        </div>
-                    </div>
+          <!-- Image Detection Mode -->
+          <div id="imageMode" class="detection-mode hidden">
+            <div class="bg-black bg-opacity-30 backdrop-blur-lg rounded-2xl p-8 border border-purple-500">
+              <h2 class="text-2xl font-bold mb-6 text-purple-400">Image Authenticity Analysis</h2>
+              <div class="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center">
+                <input type="file" id="imageInput" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
+                <div id="imageDropZone" onclick="document.getElementById('imageInput').click()">
+                  <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                  <p class="text-gray-400 mb-2">Click to upload or drag image here</p>
+                  <p class="text-sm text-gray-500">Supports JPG, PNG, WebP</p>
                 </div>
-                
-                <div class="grid md:grid-cols-3 gap-4 mb-6">
-                    <div class="bg-gray-800 p-4 rounded-lg text-center">
-                        <div class="text-2xl font-bold ${statusClass}">${(data.ai_probability * 100).toFixed(1)}%</div>
-                        <div class="text-sm text-gray-400">AI Probability</div>
-                    </div>
-                    <div class="bg-gray-800 p-4 rounded-lg text-center">
-                        <div class="text-2xl font-bold text-yellow-400">${data.faces_detected.length}</div>
-                        <div class="text-sm text-gray-400">Faces Detected</div>
-                    </div>
-                    <div class="bg-gray-800 p-4 rounded-lg text-center">
-                        <div class="text-2xl font-bold text-purple-400">${(data.edge_density * 100).toFixed(1)}%</div>
-                        <div class="text-sm text-gray-400">Edge Density</div>
-                    </div>
+                <div id="imagePreview" class="hidden mt-4">
+                  <img id="previewImg" class="max-w-full h-64 mx-auto rounded-lg">
                 </div>
-                
-                ${data.faces_detected.length > 0 ? `
-                <div class="bg-yellow-900 bg-opacity-30 border border-yellow-500 rounded-lg p-4 mb-6">
-                    <h4 class="font-medium text-yellow-400 mb-2">Face Analysis</h4>
-                    <div class="space-y-2">
-                        ${data.faces_detected.map((face, i) => `
-                            <div class="text-sm text-yellow-200">
-                                Face ${i+1}: ${face.potential_deepfake ? 'Potential Deepfake Detected' : 'Appears Natural'}
-                                (Blur Level: ${face.blur_level.toFixed(2)})
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-                ` : ''}
-                
-                <div class="flex justify-between items-center">
-                    <button onclick="openARViewer()" class="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 px-6 py-2 rounded-lg font-medium transition-all duration-300">
-                        <i class="fas fa-cube mr-2"></i>View in AR
-                    </button>
-                    <div class="text-sm text-gray-400">
-                        Analyzed: ${new Date(data.timestamp).toLocaleTimeString()}
-                    </div>
-                </div>
-            `;
-            
-            resultsSection.classList.remove('hidden');
-            resultsSection.scrollIntoView({ behavior: 'smooth' });
-        }
+              </div>
+              <button
+                id="analyzeImageBtn"
+                onclick="analyzeImage()"
+                class="w-full mt-6 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 px-6 py-3 rounded-lg font-bold flex items-center justify-center transition-all duration-300 transform hover:scale-105"
+                disabled
+              >
+                <i class="fas fa-search mr-2"></i>
+                Analyze Image
+              </button>
+            </div>
+          </div>
+        </div>
 
-        // Handle image upload
-        function handleImageUpload(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('previewImg').src = e.target.result;
-                    document.getElementById('imageDropZone').classList.add('hidden');
-                    document.getElementById('imagePreview').classList.remove('hidden');
-                    document.getElementById('analyzeImageBtn').disabled = false;
-                };
-                reader.readAsDataURL(file);
-            }
-        }
+        <!-- Results Panel -->
+        <div class="space-y-6">
+          <!-- Real-time Status -->
+          <div class="bg-black bg-opacity-30 backdrop-blur-lg rounded-2xl p-6 border border-green-500">
+            <h3 class="text-lg font-bold mb-4 text-green-400">Live Analysis</h3>
+            <div id="liveStatus" class="space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-gray-400">System Status:</span>
+                <span class="text-green-400 font-medium">Online</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-gray-400">AI Models:</span>
+                <span class="text-green-400 font-medium">Ready</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-gray-400">Analyses Today:</span>
+                <span class="text-blue-400 font-medium" id="todayCount">0</span>
+              </div>
+            </div>
+          </div>
 
-        // Update recent results
-        function updateRecentResults(data) {
-            const container = document.getElementById('recentResults');
-            const timestamp = new Date().toLocaleTimeString();
-            const statusClass = data.result.is_ai_generated ? 'text-red-400' : 'text-green-400';
-            const statusText = data.result.is_ai_generated ? 'AI Detected' : 'Human Content';
-            
-            const resultItem = document.createElement('div');
-            resultItem.className = 'bg-gray-800 p-3 rounded-lg border-l-4 ' + (data.result.is_ai_generated ? 'border-red-500' : 'border-green-500');
-            resultItem.innerHTML = `
-                <div class="flex justify-between items-center">
-                    <div>
-                        <div class="font-medium ${statusClass}">${statusText}</div>
-                        <div class="text-xs text-gray-400">${data.type.toUpperCase()} • ${timestamp}</div>
-                    </div>
-                    <div class="text-sm font-bold ${statusClass}">
-                        ${(data.result.confidence_score * 100).toFixed(0)}%
-                    </div>
-                </div>
-            `;
-            
-            if (container.children.length === 1 && container.children[0].textContent.includes('No analyses yet')) {
-                container.innerHTML = '';
-            }
-            
-            container.insertBefore(resultItem, container.firstChild);
-            
-            // Keep only last 5 results
-            while (container.children.length > 5) {
-                container.removeChild(container.lastChild);
-            }
-        }
+          <!-- Recent Results -->
+          <div class="bg-black bg-opacity-30 backdrop-blur-lg rounded-2xl p-6 border border-yellow-500">
+            <h3 class="text-lg font-bold mb-4 text-yellow-400">Recent Detections</h3>
+            <div id="recentResults" class="space-y-3">
+              <div class="text-center text-gray-500 py-8">No analyses yet</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-        // Open AR Viewer
-        function openARViewer() {
-            window.open('/ar-viewer', '_blank', 'width=800,height=600');
-        }
+    <!-- Results Display -->
+    <section id="resultsSection" class="hidden max-w-6xl mx-auto px-4 mt-12">
+      <div class="bg-black bg-opacity-50 backdrop-blur-lg rounded-2xl p-8 border border-gray-600">
+        <h2 class="text-2xl font-bold mb-6">Analysis Results</h2>
+        <div id="resultsContent"></div>
+      </div>
+    </section>
+  </div>
 
-        // Text counter setup
-        document.getElementById('textInput').addEventListener('input', function() {
-            const text = this.value;
-            document.getElementById('textCharCount').textContent = text.length;
-            document.getElementById('textWordCount').textContent = text.trim() ? text.trim().split(/\s+/).length : 0;
-        });
-    </script>
+  <!-- Custom JS -->
+  <script src="script.js"></script>
 </body>
 </html>

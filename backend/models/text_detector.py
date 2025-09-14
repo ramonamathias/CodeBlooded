@@ -28,7 +28,6 @@ class EnhancedTextDetector:
             confidence_score = max(ai_probability, 1 - ai_probability)
             
             words = text.split()
-            
             return {
                 'is_ai_generated': ai_probability > 0.5,
                 'ai_probability': ai_probability,
