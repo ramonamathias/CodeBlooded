@@ -1,4 +1,4 @@
-# TruthGuard AI — Multi-Modal Authentication & Detection Platform
+readme_content = """# TruthGuard AI — Multi-Modal Authentication & Detection Platform
 
 TruthGuard AI is an advanced, full-stack content verification platform designed to combat deepfakes and synthetic media. It provides a clean web interface where users can analyze both text blocks and images simultaneously to detect AI-generated content with high precision.
 
@@ -17,6 +17,7 @@ TruthGuard AI is an advanced, full-stack content verification platform designed 
 ## Getting Started
 
 ### 1. Install Dependencies
+
 Run this command in your terminal to install the core server packages:
 
 ```bash
@@ -31,3 +32,9 @@ python app.py
 Once the server is running, open your web browser and navigate to:
 
 http://127.0.0.1:5000
+"""
+
+with open("README.md", "w", encoding="utf-8") as f:
+f.write(readme_content)
+
+print("README.md has been generated with perfect spacing!")
