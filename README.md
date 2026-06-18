@@ -1,18 +1,15 @@
-# ScaleEngine - Distributed Task Queue
+# TruthGuard AI — Multi-Modal Authentication & Detection Platform
 
-A distributed task queue built with Node.js and Redis to handle heavy background jobs (like PDF generation) asynchronously without blocking the main Express server.
-It uses the Competing Consumers pattern, meaning you can spin up multiple worker processes to handle the queue in parallel.
+An advanced, full-stack content verification platform designed to combat deepfakes and synthetic media. It provides a clean web interface where users can analyze both text blocks and images simultaneously to detect AI-generated content with high precision.
 
 ## Tech Stack
 
-- **Backend:** Node.js, Express
-- **Message Broker:** Redis
-- **PDF Generation:** PDFKit
+- **Backend:** Python, Flask, Flask-CORS
+- **Frontend:** HTML5, CSS3, JavaScript (ES6)
 
 ## How It Works
 
-The Express Server accepts incoming tasks and pushes them into a Redis queue. It immediately returns a 202 Accepted status to the client.
-The Workers listen to the Redis queue, pull tasks off sequentially using atomic commands, and process the heavy PDF generation completely in the background.
+Separate, specialized processing streams handle text analysis and image analysis simultaneously. A real-time statistical dashboard dynamically tracks total scan counts, AI-flagged detections, and human-content ratios.
 
 ## Setup and Installation
 
@@ -20,20 +17,16 @@ The Workers listen to the Redis queue, pull tasks off sequentially using atomic 
 
 Run this command in your terminal:
 
-<pre><code>npm install</code></pre>
+<pre><code>pip install flask flask-cors</code></pre>
 
-### 2. Run Redis
-
-Make sure your local Redis server is running.
-
-### 3. Start the API server
+### 2. Start the API server
 
 Run this command in your terminal:
 
-<pre><code>node server.js</code></pre>
+<pre><code>python backend/app.py</code></pre>
 
-### 4. Start a worker
+### 3. Open the interface
 
-Run this command in a separate terminal:
+Once the server is running, open your web browser and navigate to:
 
-<pre><code>node worker.js</code></pre>
+<pre><code>http://127.0.0.1:5000</code></pre>
