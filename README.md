@@ -1,6 +1,18 @@
-# TruthGuard AI — Multi-Modal Authentication & Detection Platform
+# ScaleEngine - Distributed Task Queue
 
-TruthGuard AI is an advanced, full-stack content verification platform designed to combat deepfakes and synthetic media.
+A distributed task queue built with Node.js and Redis to handle heavy background jobs (like PDF generation) asynchronously without blocking the main Express server.
+It uses the Competing Consumers pattern, meaning you can spin up multiple worker processes to handle the queue in parallel.
+
+## Tech Stack
+
+- **Backend:** Node.js, Express
+- **Message Broker:** Redis
+- **PDF Generation:** PDFKit
+
+## How It Works
+
+The Express Server accepts incoming tasks and pushes them into a Redis queue. It immediately returns a 202 Accepted status to the client.
+The Workers listen to the Redis queue, pull tasks off sequentially using atomic commands, and process the heavy PDF generation completely in the background.
 
 ## Setup and Installation
 
@@ -8,16 +20,20 @@ TruthGuard AI is an advanced, full-stack content verification platform designed 
 
 Run this command in your terminal:
 
-<code>pip install flask flask-cors</code>
+<pre><code>npm install</code></pre>
 
-### 2. Start the API server
+### 2. Run Redis
+
+Make sure your local Redis server is running.
+
+### 3. Start the API server
 
 Run this command in your terminal:
 
-<code>python backend/app.py</code>
+<pre><code>node server.js</code></pre>
 
-### 3. Open the interface
+### 4. Start a worker
 
-Once the server is running, open your web browser and navigate to:
+Run this command in a separate terminal:
 
-<code>http://127.0.0.1:5000</code>
+<pre><code>node worker.js</code></pre>
