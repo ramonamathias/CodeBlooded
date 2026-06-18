@@ -1,6 +1,6 @@
 # TruthGuard AI — Multi-Modal Authentication & Detection Platform
 
-TruthGuard AI is an advanced, full-stack content verification platform designed to combat deepfakes and synthetic media. It provides a clean web interface where users can analyze both text blocks and images simultaneously to detect AI-generated content with high precision.
+TruthGuard AI is an advanced, full-stack content verification platform designed to combat deepfakes and synthetic media.
 
 ## Setup and Installation
 
