@@ -16,6 +16,7 @@ TruthGuard AI is an advanced, full-stack content verification platform designed 
 
 ### 1. Install Dependencies
 Run this command in your terminal to install the core server packages:
+
 ```bash
 pip install flask flask-cors
 2. Start the Application
